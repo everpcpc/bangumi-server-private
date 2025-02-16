@@ -1,7 +1,7 @@
 export enum GroupTopicMode {
   All = 'all',
-  Joined = 'joined',
   Created = 'created',
+  Joined = 'joined',
   Replied = 'replied',
 }
 
