@@ -21,7 +21,9 @@ import imaginary from '@app/lib/services/imaginary.ts';
 import * as Subject from '@app/lib/subject/index.ts';
 import * as fetcher from '@app/lib/types/fetcher.ts';
 import * as res from '@app/lib/types/res.ts';
+import { LimitAction } from '@app/lib/utils/rate-limit';
 import { requireLogin, requirePermission } from '@app/routes/hooks/pre-handler.ts';
+import { rateLimit } from '@app/routes/hooks/rate-limit';
 import type { App } from '@app/routes/type.ts';
 
 async function getSubjectInfo(subjectID: number) {
@@ -186,6 +188,8 @@ export function setup(app: App) {
         throw new ImageFileTooLarge();
       }
 
+      await rateLimit(LimitAction.Wiki, auth.userID);
+
       // validate image
       const resp = await imaginary.info(raw);
       const format = resp.type;
@@ -268,6 +272,7 @@ export function setup(app: App) {
         throw new NotFoundError(`image(id=${imageID}, subjectID=${subjectID})`);
       }
 
+      await rateLimit(LimitAction.Like, auth.userID);
       await db.insert(schema.chiiLikes).values({
         type: LikeType.SubjectCover,
         relatedID: imageID,
@@ -304,6 +309,7 @@ export function setup(app: App) {
       ],
     },
     async ({ params: { subjectID, imageID }, auth }) => {
+      await rateLimit(LimitAction.Like, auth.userID);
       const [result] = await db
         .update(schema.chiiLikes)
         .set({ deleted: true })
